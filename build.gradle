@@ -1,0 +1,57 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.2.6'
+	id 'io.spring.dependency-management' version '1.1.5'
+	id 'com.google.cloud.tools.jib' version '3.4.0'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '21'
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.kafka:spring-kafka'
+
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+jib {
+	from {
+		image = 'openjdk:21'
+	}
+	to {
+		image = 'public.ecr.aws/o4o3m8u3/timeline-server'
+		tags = ['0.0.1']
+		auth {
+			username = 'AWS'
+			password = System.getenv('AWS_ECR_PASSWORD') ?: 'default_password' // 기본값으로 null 방지
+		}
+	}
+	container {
+		creationTime = 'USE_CURRENT_TIMESTAMP'
+	}
+}
